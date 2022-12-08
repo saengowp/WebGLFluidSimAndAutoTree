@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import "./style.css"
+import hello from "raw-loader!./hello.txt"
 
 const scene = new THREE.Scene();
 const width = window.innerWidth;
