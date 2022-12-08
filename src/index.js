@@ -1,7 +1,14 @@
 import * as THREE from 'three';
 import "./style.css";
 import testShaderCode from "raw-loader!./test.glsl";
-import { PlaneGeometry, Scene } from 'three';
+import { PlaneGeometry, Scene, Vector2 } from 'three';
+import * as dat from 'dat.gui';
+
+// UI
+const gui = new dat.GUI();
+const controlData = {
+    //enableGen: true,
+};
 
 // Setup Scene and Renderer
 const scene = new THREE.Scene();
@@ -30,9 +37,25 @@ const material = new THREE.ShaderMaterial({
         screenSize: {
             type: 'v2',
             value: new THREE.Vector2(width, height)
+        },
+        gen: {
+            type: 'v2',
+            //value: controlData.enableGen,
+            value: new THREE.Vector2(-1.0, -1.0)
         }
     }
 })
+
+document.addEventListener("mousedown", e => {
+    material.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+    console.log(material.uniforms.gen.value);
+})
+document.addEventListener("mouseup", e => {
+    //material.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
+})
+
+//gui.add(controlData, 'enableGen', 0, 1, 1).onChange(e => material.uniforms.enableGen.value = e == 1);
+
 const mesh = new THREE.Mesh(geometry, material);
 const bufferScene =  new Scene()
 bufferScene.add(mesh);
