@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require('path');
 
 module.exports = {
@@ -10,8 +11,17 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
         title: "RCG Final Project"
-    })
+    }),
+    new MiniCssExtractPlugin(),
   ],
   mode: "development",
   devtool: 'inline-source-map',
+  module: {
+    rules: [
+        {
+            test: /\.css$/,
+            use: [MiniCssExtractPlugin.loader, "css-loader"],
+        }
+    ]
+  }
 };
