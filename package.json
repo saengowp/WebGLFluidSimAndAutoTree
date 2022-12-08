@@ -1,0 +1,27 @@
+{
+  "name": "rcg-finalproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "serve": "webpack serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saengowp/RCG-FinalProject.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saengowp/RCG-FinalProject/issues"
+  },
+  "homepage": "https://github.com/saengowp/RCG-FinalProject#readme",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
+}
