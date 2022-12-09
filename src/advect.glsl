@@ -11,4 +11,8 @@ void main() {
 
     gl_FragColor = cen;
     gl_FragColor.r = texture2D(previous, prevLoc).r;
+    if (prevLoc.x < 0.0 || prevLoc.x > 1.0 || prevLoc.y < 0.0 || prevLoc.y > 1.0) {
+        gl_FragColor.r = 0.0;
+    } 
+
 }
