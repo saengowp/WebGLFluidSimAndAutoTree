@@ -7,7 +7,6 @@ import * as dat from 'dat.gui';
 // UI
 const gui = new dat.GUI();
 const controlData = {
-    //enableGen: true,
 };
 
 // Setup Scene and Renderer
@@ -27,6 +26,7 @@ let bufferA = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.Linea
 let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
 
 const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
+const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
 const material = new THREE.ShaderMaterial({
     fragmentShader: testShaderCode,
     uniforms: {
@@ -46,19 +46,39 @@ const material = new THREE.ShaderMaterial({
     }
 })
 
+let genDragActive = false;
+
 document.addEventListener("mousedown", e => {
+    genDragActive = true;
     material.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
-    console.log(material.uniforms.gen.value);
 })
 document.addEventListener("mouseup", e => {
-    //material.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
+    material.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
+    genDragActive = false;
 })
+
+document.addEventListener("mousemove", e => {
+    if (genDragActive) {
+        material.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+    }
+})
+
+
 
 //gui.add(controlData, 'enableGen', 0, 1, 1).onChange(e => material.uniforms.enableGen.value = e == 1);
 
 const mesh = new THREE.Mesh(geometry, material);
 const bufferScene =  new Scene()
 bufferScene.add(mesh);
+
+controlData.clearBuffer = function () {
+   const temp = mesh.material;
+   mesh.material = clearMaterial;
+   renderer.setRenderTarget(bufferB);
+   renderer.render(bufferScene, camera);
+   mesh.material = temp;
+}
+gui.add(controlData, 'clearBuffer');
 
 //const displayMaterial = new THREE.MeshBasicMaterial({map: texA});
 const displayMaterial = new THREE.MeshBasicMaterial({map: bufferA.texture});
