@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import "./style.css";
 import diffuseShader from "raw-loader!./diffuse.glsl";
-import { PlaneGeometry, Scene, Vector2 } from 'three';
+import advectShader from "raw-loader!./advect.glsl";
 import * as dat from 'dat.gui';
 
 // UI
@@ -49,6 +49,23 @@ const diffuseMaterial = new THREE.ShaderMaterial({
         }
     }
 })
+const advectMaterial = new THREE.ShaderMaterial({
+    fragmentShader: advectShader,
+    uniforms: {
+        previous: {
+            type: "t",
+            value: bufferA.texture,
+        },
+        screenSize: {
+            type: 'v2',
+            value: new THREE.Vector2(width, height)
+        },
+        dt: {
+            type: 'float',
+            value: 1.0,
+        }
+    }
+})
 
 let genDragActive = false;
 
@@ -72,7 +89,7 @@ document.addEventListener("mousemove", e => {
 //gui.add(controlData, 'enableGen', 0, 1, 1).onChange(e => material.uniforms.enableGen.value = e == 1);
 
 const mesh = new THREE.Mesh(geometry, diffuseMaterial);
-const bufferScene =  new Scene()
+const bufferScene =  new THREE.Scene()
 bufferScene.add(mesh);
 
 controlData.clearBuffer = function () {
@@ -98,6 +115,7 @@ function animate() {
     const dt = performance.now()/1000 - lastFrame;
     lastFrame = performance.now()/1000;
 
+    // Diffuse Density
     for (let i = 0; i < 20; i++) {
         [bufferA, bufferB] = [bufferB, bufferA];
         diffuseMaterial.uniforms.previous.value = bufferA.texture;
@@ -106,6 +124,14 @@ function animate() {
         renderer.setRenderTarget(bufferB);
         renderer.render(bufferScene, camera);
     }
+
+    // Advect Density
+    [bufferA, bufferB] = [bufferB, bufferA];
+    advectMaterial.uniforms.previous.value = bufferA.texture;
+    advectMaterial.uniforms.dt.value = dt;
+    mesh.material = advectMaterial; 
+    renderer.setRenderTarget(bufferB);
+    renderer.render(bufferScene, camera);
 
     renderer.setRenderTarget(null);
     displayMesh.material.map = bufferB.texture;
