@@ -42,6 +42,10 @@ const material = new THREE.ShaderMaterial({
             type: 'v2',
             //value: controlData.enableGen,
             value: new THREE.Vector2(-1.0, -1.0)
+        },
+        dt: {
+            type: 'float',
+            value: 1.0,
         }
     }
 })
@@ -86,11 +90,17 @@ const displayMesh = new THREE.Mesh(geometry, displayMaterial);
 scene.add(displayMesh);
 
 let f = false;
+let lastFrame = 0;
 
 // Render Loop
 function animate() {
+    requestAnimationFrame(animate);
+    const dt = performance.now()/1000 - lastFrame;
+    lastFrame = performance.now()/1000;
+
     [bufferA, bufferB] = [bufferB, bufferA];
     material.uniforms.previous.value = bufferA.texture;
+    material.uniforms.dt.value = dt;
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
 
@@ -103,7 +113,6 @@ function animate() {
         console.log({width, height});
         f = true;
     }
-    requestAnimationFrame(animate);
 }
 
 // DOM Insertion and Start Render Loop
