@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import "./style.css";
-import testShaderCode from "raw-loader!./test.glsl";
+import diffuseShader from "raw-loader!./diffuse.glsl";
 import { PlaneGeometry, Scene, Vector2 } from 'three';
 import * as dat from 'dat.gui';
 
@@ -27,8 +27,8 @@ let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.Linea
 
 const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
 const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
-const material = new THREE.ShaderMaterial({
-    fragmentShader: testShaderCode,
+const diffuseMaterial = new THREE.ShaderMaterial({
+    fragmentShader: diffuseShader,
     uniforms: {
         previous: {
             type: "t",
@@ -54,16 +54,16 @@ let genDragActive = false;
 
 document.addEventListener("mousedown", e => {
     genDragActive = true;
-    material.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
 })
 document.addEventListener("mouseup", e => {
-    material.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
+    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
     genDragActive = false;
 })
 
 document.addEventListener("mousemove", e => {
     if (genDragActive) {
-        material.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+        diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
     }
 })
 
@@ -71,7 +71,7 @@ document.addEventListener("mousemove", e => {
 
 //gui.add(controlData, 'enableGen', 0, 1, 1).onChange(e => material.uniforms.enableGen.value = e == 1);
 
-const mesh = new THREE.Mesh(geometry, material);
+const mesh = new THREE.Mesh(geometry, diffuseMaterial);
 const bufferScene =  new Scene()
 bufferScene.add(mesh);
 
@@ -98,11 +98,14 @@ function animate() {
     const dt = performance.now()/1000 - lastFrame;
     lastFrame = performance.now()/1000;
 
-    [bufferA, bufferB] = [bufferB, bufferA];
-    material.uniforms.previous.value = bufferA.texture;
-    material.uniforms.dt.value = dt;
-    renderer.setRenderTarget(bufferB);
-    renderer.render(bufferScene, camera);
+    for (let i = 0; i < 20; i++) {
+        [bufferA, bufferB] = [bufferB, bufferA];
+        diffuseMaterial.uniforms.previous.value = bufferA.texture;
+        diffuseMaterial.uniforms.dt.value = dt;
+        mesh.material = diffuseMaterial; 
+        renderer.setRenderTarget(bufferB);
+        renderer.render(bufferScene, camera);
+    }
 
     renderer.setRenderTarget(null);
     displayMesh.material.map = bufferB.texture;

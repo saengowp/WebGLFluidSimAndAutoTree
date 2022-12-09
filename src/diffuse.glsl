@@ -14,7 +14,7 @@ void main() {
         cen = texture2D(previous, relCord);
     
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    float diff = 1.0;
+    float diff = 0.01;
     float a = dt * diff * screenSize.x * screenSize.y;
     gl_FragColor.r = (cen.r + a*(left.r + right.r + up.r + down.r))/(1.0 + 4.0*a);
 
