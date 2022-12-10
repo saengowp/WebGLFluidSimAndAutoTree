@@ -6,12 +6,16 @@ import projectDiv from "raw-loader!./project-div.glsl";
 import projectSolveP from "raw-loader!./project-solvep.glsl";
 import projectApply from "raw-loader!./project-apply.glsl";
 import displayShader from "raw-loader!./display.glsl";
+import windShader from "raw-loader!./wind.glsl";
 import * as dat from 'dat.gui';
 
 // UI
 const gui = new dat.GUI();
 const controlData = {
     channel: 0,
+    windX: 0,
+    windY: 0,
+    boyance: false,
 };
 
 // Setup Scene and Renderer
@@ -33,7 +37,7 @@ let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.Linea
 let divB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 
 const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
-const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
+const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000, opacity: 0.0});
 const diffuseMaterial = new THREE.ShaderMaterial({
     fragmentShader: diffuseShader,
     uniforms: {
@@ -97,6 +101,37 @@ for (const program of [projectDiv, projectSolveP, projectApply]) {
     })
     projectMaterials.push(shader);
 }
+
+const windMaterial = new THREE.ShaderMaterial({
+    fragmentShader: windShader,
+    uniforms: {
+        previous: {
+            type: "t",
+            value: bufferA.texture,
+        },
+        screenSize: {
+            type: 'v2',
+            value: new THREE.Vector2(width, height)
+        },
+        wind: {
+            type: 'v2',
+            value: new THREE.Vector2(0, 0),
+        },
+        boyance: {
+            type: 'bool',
+            value: false,
+        },
+        dt: {
+            type: 'float',
+            value: 0,
+        }
+    }
+})
+
+gui.add(controlData, "windX", -100, 100).onChange(e => windMaterial.uniforms.wind.value.x = e);
+gui.add(controlData, "windY", -100, 100).onChange(e => {windMaterial.uniforms.wind.value.y = e;});
+gui.add(controlData, "boyance").onChange(e => windMaterial.uniforms.boyance.value = e);
+
 
 let genDragActive = false;
 
@@ -213,6 +248,14 @@ function animate() {
     [bufferA, bufferB] = [bufferB, bufferA];
     projectMaterials[2].uniforms.previous.value = bufferA.texture;
     mesh.material = projectMaterials[2];
+    renderer.setRenderTarget(bufferB);
+    renderer.render(bufferScene, camera);
+
+    // Project Apply
+    [bufferA, bufferB] = [bufferB, bufferA];
+    windMaterial.uniforms.previous.value = bufferA.texture;
+    windMaterial.uniforms.dt.value = dt;
+    mesh.material = windMaterial;
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
 
