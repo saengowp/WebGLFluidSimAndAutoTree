@@ -1,6 +1,5 @@
 uniform sampler2D previous;
 uniform vec2 screenSize;
-uniform vec2 gen;
 uniform float dt;
 
 void main() {
@@ -20,7 +19,4 @@ void main() {
     gl_FragColor[1] = (cen[1] + a*(left[1] + right[1] + up[1] + down[1]))/(1.0 + 4.0*a);
     gl_FragColor[2] = (cen[2] + a*(left[2] + right[2] + up[2] + down[2]))/(1.0 + 4.0*a);
 
-    if (gen.x >= 0.0 && distance(gen.xy, gl_FragCoord.xy) < 15.0) {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);
-    }
 }

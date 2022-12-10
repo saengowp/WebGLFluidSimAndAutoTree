@@ -15,7 +15,7 @@ const controlData = {
     channel: 0,
     windX: 0,
     windY: 0,
-    boyance: false,
+    boyance: true,
 };
 
 // Setup Scene and Renderer
@@ -51,11 +51,6 @@ const diffuseMaterial = new THREE.ShaderMaterial({
         screenSize: {
             type: 'v2',
             value: new THREE.Vector2(width, height)
-        },
-        gen: {
-            type: 'v2',
-            //value: controlData.enableGen,
-            value: new THREE.Vector2(-1.0, -1.0)
         },
         dt: {
             type: 'float',
@@ -122,17 +117,30 @@ const windMaterial = new THREE.ShaderMaterial({
         },
         boyance: {
             type: 'bool',
-            value: false,
+            value: controlData.boyance,
         },
         dt: {
             type: 'float',
             value: 0,
+        },
+        clear: {
+            type: 'bool',
+            value: false,
+        },
+        gen: {
+            type: 'v2',
+            //value: controlData.enableGen,
+            value: new THREE.Vector2(-1.0, -1.0)
+        },
+        genVel: {
+            type: 'v2',
+            value: new THREE.Vector2(0.0, 0.0)
         }
     }
 })
 
-gui.add(controlData, "windX", -100, 100).onChange(e => windMaterial.uniforms.wind.value.x = e);
-gui.add(controlData, "windY", -100, 100).onChange(e => {windMaterial.uniforms.wind.value.y = e;});
+gui.add(controlData, "windX", -1000, 1000).onChange(e => windMaterial.uniforms.wind.value.x = e);
+gui.add(controlData, "windY", -1000, 1000).onChange(e => {windMaterial.uniforms.wind.value.y = e;});
 gui.add(controlData, "boyance").onChange(e => windMaterial.uniforms.boyance.value = e);
 
 
@@ -140,16 +148,20 @@ let genDragActive = false;
 
 document.addEventListener("mousedown", e => {
     genDragActive = true;
-    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
+    windMaterial.uniforms.genVel.value = new THREE.Vector2(0, 0);
+    windMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
 })
 document.addEventListener("mouseup", e => {
-    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
+    windMaterial.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
     genDragActive = false;
 })
 
 document.addEventListener("mousemove", e => {
     if (genDragActive) {
-        diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
+        const newSrc = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
+        const oldSrc = windMaterial.uniforms.gen.value;
+        windMaterial.uniforms.genVel.value = new THREE.Vector2((newSrc.x - oldSrc.x) * 10, (newSrc.y - oldSrc.y) * 10);
+        windMaterial.uniforms.gen.value = newSrc;
     }
 })
 
@@ -163,10 +175,12 @@ bufferScene.add(mesh);
 
 controlData.clearBuffer = function () {
    const temp = mesh.material;
-   mesh.material = clearMaterial;
+   mesh.material = windMaterial;
+   windMaterial.uniforms.clear.value = true;
    renderer.setRenderTarget(bufferB);
    renderer.render(bufferScene, camera);
    mesh.material = temp;
+   windMaterial.uniforms.clear.value = false;
 }
 gui.add(controlData, 'clearBuffer');
 
@@ -216,6 +230,15 @@ function animate() {
     const dt = performance.now()/1000 - lastFrame;
     lastFrame = performance.now()/1000;
 
+    // Wind Apply
+    [bufferA, bufferB] = [bufferB, bufferA];
+    windMaterial.uniforms.previous.value = bufferA.texture;
+    windMaterial.uniforms.dt.value = dt;
+    mesh.material = windMaterial;
+    renderer.setRenderTarget(bufferB);
+    renderer.render(bufferScene, camera);
+
+
     // Diffuse
     for (let i = 0; i < 20; i++) {
         [bufferA, bufferB] = [bufferB, bufferA];
@@ -253,14 +276,6 @@ function animate() {
     [bufferA, bufferB] = [bufferB, bufferA];
     projectMaterials[2].uniforms.previous.value = bufferA.texture;
     mesh.material = projectMaterials[2];
-    renderer.setRenderTarget(bufferB);
-    renderer.render(bufferScene, camera);
-
-    // Project Apply
-    [bufferA, bufferB] = [bufferB, bufferA];
-    windMaterial.uniforms.previous.value = bufferA.texture;
-    windMaterial.uniforms.dt.value = dt;
-    mesh.material = windMaterial;
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
 
