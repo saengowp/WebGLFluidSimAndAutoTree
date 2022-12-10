@@ -16,14 +16,15 @@ const height = window.innerHeight;
 const camera = new THREE.OrthographicCamera(-width/2, width/2, height/2, -height/2, 1, 1000);
 camera.position.z = 2;
 const renderer = new THREE.WebGLRenderer();
+renderer.getContext().getExtension('OES_texture_float');
 renderer.setSize(width, height);
 
 const geometry = new THREE.PlaneGeometry(width, height);
 
 
 const testTex = new THREE.TextureLoader().load("test.jpg")
-let bufferA = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
-let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter});
+let bufferA = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
+let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 
 const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
 const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
@@ -46,7 +47,8 @@ const diffuseMaterial = new THREE.ShaderMaterial({
         dt: {
             type: 'float',
             value: 1.0,
-        }
+        },
+        
     }
 })
 const advectMaterial = new THREE.ShaderMaterial({
@@ -63,7 +65,8 @@ const advectMaterial = new THREE.ShaderMaterial({
         dt: {
             type: 'float',
             value: 1.0,
-        }
+        },
+        
     }
 })
 
@@ -109,13 +112,24 @@ scene.add(displayMesh);
 let f = false;
 let lastFrame = 0;
 
+controlData["runSimulation"] = true;
+gui.add(controlData, "runSimulation");
+
+
 // Render Loop
 function animate() {
     requestAnimationFrame(animate);
+
+    if (!controlData.runSimulation) {
+        renderer.setRenderTarget(null);
+        displayMesh.material.map = bufferB.texture;
+        renderer.render(scene, camera)
+        return;
+    }
     const dt = performance.now()/1000 - lastFrame;
     lastFrame = performance.now()/1000;
 
-    // Diffuse Density
+    // Diffuse
     for (let i = 0; i < 20; i++) {
         [bufferA, bufferB] = [bufferB, bufferA];
         diffuseMaterial.uniforms.previous.value = bufferA.texture;
@@ -125,7 +139,7 @@ function animate() {
         renderer.render(bufferScene, camera);
     }
 
-    // Advect Density
+    // Advect
     [bufferA, bufferB] = [bufferB, bufferA];
     advectMaterial.uniforms.previous.value = bufferA.texture;
     advectMaterial.uniforms.dt.value = dt;
