@@ -21,6 +21,6 @@ void main() {
     gl_FragColor[2] = (cen[2] + a*(left[2] + right[2] + up[2] + down[2]))/(1.0 + 4.0*a);
 
     if (gen.x >= 0.0 && distance(gen.xy, gl_FragCoord.xy) < 15.0) {
-        gl_FragColor = vec4(1.0, 100.0, 0.0, 1.0);
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);
     }
 }

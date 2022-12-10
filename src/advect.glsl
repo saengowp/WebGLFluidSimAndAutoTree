@@ -11,6 +11,6 @@ void main() {
 
     gl_FragColor = texture2D(previous, prevLoc);
     if (prevLoc.x < 0.0 || prevLoc.x > 1.0 || prevLoc.y < 0.0 || prevLoc.y > 1.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     } 
 }

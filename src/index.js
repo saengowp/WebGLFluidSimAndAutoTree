@@ -2,11 +2,16 @@ import * as THREE from 'three';
 import "./style.css";
 import diffuseShader from "raw-loader!./diffuse.glsl";
 import advectShader from "raw-loader!./advect.glsl";
+import projectDiv from "raw-loader!./project-div.glsl";
+import projectSolveP from "raw-loader!./project-solvep.glsl";
+import projectApply from "raw-loader!./project-apply.glsl";
+import displayShader from "raw-loader!./display.glsl";
 import * as dat from 'dat.gui';
 
 // UI
 const gui = new dat.GUI();
 const controlData = {
+    channel: 0,
 };
 
 // Setup Scene and Renderer
@@ -25,6 +30,7 @@ const geometry = new THREE.PlaneGeometry(width, height);
 const testTex = new THREE.TextureLoader().load("test.jpg")
 let bufferA = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
+let divB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 
 const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
 const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000});
@@ -70,6 +76,28 @@ const advectMaterial = new THREE.ShaderMaterial({
     }
 })
 
+const projectMaterials = []
+for (const program of [projectDiv, projectSolveP, projectApply]) {
+    const shader = new THREE.ShaderMaterial({
+        fragmentShader: program,
+        uniforms: {
+            previous: {
+                type: "t",
+                value: bufferA.texture,
+            },
+            div: {
+                type: "t",
+                value: divB.texture,
+            },
+            screenSize: {
+                type: 'v2',
+                value: new THREE.Vector2(width, height)
+            },
+        }
+    })
+    projectMaterials.push(shader);
+}
+
 let genDragActive = false;
 
 document.addEventListener("mousedown", e => {
@@ -105,7 +133,26 @@ controlData.clearBuffer = function () {
 gui.add(controlData, 'clearBuffer');
 
 //const displayMaterial = new THREE.MeshBasicMaterial({map: texA});
-const displayMaterial = new THREE.MeshBasicMaterial({map: bufferA.texture});
+// const displayMaterial = new THREE.MeshBasicMaterial({map: bufferA.texture});
+const displayMaterial = new THREE.ShaderMaterial({
+    fragmentShader: displayShader,
+    uniforms: {
+        previous: {
+            type: 't',
+            value: bufferA.texture
+        },
+        screenSize: {
+            type: 'v2',
+            value: new THREE.Vector2(width, height)
+        },
+        ch: {
+            type: 'int',
+            value: 0,
+        }
+    }
+});
+
+gui.add(controlData, "channel", 0, 3, 1).onChange(v => displayMaterial.uniforms.ch.value = v);
 const displayMesh = new THREE.Mesh(geometry, displayMaterial);
 scene.add(displayMesh);
 
@@ -147,8 +194,31 @@ function animate() {
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
 
+    // Project Div
+    projectMaterials[0].uniforms.previous.value = bufferB.texture;
+    mesh.material = projectMaterials[0];
+    renderer.setRenderTarget(divB);
+    renderer.render(bufferScene, camera);
+
+    // Project SolveP
+    for (let i = 0; i < 20; i++) {
+        [bufferA, bufferB] = [bufferB, bufferA];
+        projectMaterials[1].uniforms.previous.value = bufferA.texture;
+        mesh.material = projectMaterials[1];
+        renderer.setRenderTarget(bufferB);
+        renderer.render(bufferScene, camera);
+    }
+
+    // Project Apply
+    [bufferA, bufferB] = [bufferB, bufferA];
+    projectMaterials[2].uniforms.previous.value = bufferA.texture;
+    mesh.material = projectMaterials[2];
+    renderer.setRenderTarget(bufferB);
+    renderer.render(bufferScene, camera);
+
+    // Display
     renderer.setRenderTarget(null);
-    displayMesh.material.map = bufferB.texture;
+    displayMaterial.uniforms.previous.value = bufferB.texture;
     renderer.render(scene, camera)
 
     if (!f) {
