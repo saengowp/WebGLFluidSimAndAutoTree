@@ -20,8 +20,11 @@ const controlData = {
 
 // Setup Scene and Renderer
 const scene = new THREE.Scene();
-const width = window.innerWidth;
-const height = window.innerHeight;
+const simFac = 2;
+const screenWidth = window.innerWidth;
+const screenHeight = window.innerHeight;
+const width = screenWidth/simFac;
+const height = screenHeight/simFac;
 const camera = new THREE.OrthographicCamera(-width/2, width/2, height/2, -height/2, 1, 1000);
 camera.position.z = 2;
 const renderer = new THREE.WebGLRenderer();
@@ -137,7 +140,7 @@ let genDragActive = false;
 
 document.addEventListener("mousedown", e => {
     genDragActive = true;
-    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+    diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
 })
 document.addEventListener("mouseup", e => {
     diffuseMaterial.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
@@ -146,7 +149,7 @@ document.addEventListener("mouseup", e => {
 
 document.addEventListener("mousemove", e => {
     if (genDragActive) {
-        diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX, height-e.clientY);
+        diffuseMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
     }
 })
 
@@ -178,7 +181,7 @@ const displayMaterial = new THREE.ShaderMaterial({
         },
         screenSize: {
             type: 'v2',
-            value: new THREE.Vector2(width, height)
+            value: new THREE.Vector2(screenWidth, screenHeight)
         },
         ch: {
             type: 'int',
@@ -201,6 +204,8 @@ gui.add(controlData, "runSimulation");
 // Render Loop
 function animate() {
     requestAnimationFrame(animate);
+
+    renderer.setSize(width, height);
 
     if (!controlData.runSimulation) {
         renderer.setRenderTarget(null);
@@ -260,6 +265,7 @@ function animate() {
     renderer.render(bufferScene, camera);
 
     // Display
+    renderer.setSize(screenWidth, screenHeight);
     renderer.setRenderTarget(null);
     displayMaterial.uniforms.previous.value = bufferB.texture;
     renderer.render(scene, camera)

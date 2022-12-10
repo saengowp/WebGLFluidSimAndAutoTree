@@ -12,6 +12,6 @@ void main() {
     gl_FragColor.g += wind.x * dt;
     gl_FragColor.b += wind.y * dt;
     if (boyance) {
-        gl_FragColor.b += 100.0 * gl_FragColor.r * dt;
+        gl_FragColor.b += 10.0 * gl_FragColor.r * dt;
     }
 }
