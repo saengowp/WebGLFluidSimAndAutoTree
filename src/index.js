@@ -223,27 +223,53 @@ import { Tree } from "./tree/Tree";
 import { TreeGeometry } from "./tree/TreeGeometry";
 import { BufferGeometry, PointsMaterial } from 'three';
 
+const treeLightGui = gui.addFolder("Tree Direct Light");
+
 // Generate Tree
 const tree = new Tree({
 generations: 4, // # for branch' hierarchy
-length: 4.0, // length of root branch
-uvLength: 16.0, // uv.v ratio against geometry length (recommended is generations * length)
-radius: 0.2, // radius of root branch
-radiusSegments: 8, // # of radius segments for each branch geometry
-heightSegments: 8, // # of height segments for each branch geometry
+length: 7.0, // length of root branch
+uvLength: 1.0, // uv.v ratio against geometry length (recommended is generations * length)
+radius: 0.3, // radius of root branch
+radiusSegments: 20, // # of radius segments for each branch geometry
+heightSegments: 20, // # of height segments for each branch geometry
 });
 
 // Build Geometry
 const treeGeometry = new TreeGeometry();
 const treeMaterializedGeometry = treeGeometry.build(tree);
-const treeMaterial = new THREE.MeshBasicMaterial();
+//Texture
+const textureloader = new THREE.TextureLoader();
+const normalMap = textureloader.load("./tree/asset/tree-normal-map.jpg");
+const bumpMap = textureloader.load("./tree/asset/tree-bump-map.png");
+const treeMaterial = new THREE.MeshPhongMaterial({
+  color: 0x302622,
+  shininess: 1,
+  normalMap: normalMap,
+  displacementMap: bumpMap,
+});
 const treeMesh = new THREE.Mesh(treeMaterializedGeometry, treeMaterial);
+
+// Add Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff);
+const directLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directLight.position.set(-10, 0, 10);
+
+// Add to Light GUI
+treeLightGui.add(directLight, "intensity", 0, 10, 0.05);
+treeLightGui.add(directLight.position, "x", -100, 100, 1);
+treeLightGui.add(directLight.position, "y", -100, 100, 1);
+treeLightGui.add(directLight.position, "z", -100, 100, 1);
 
 // Add to scene
 const treeCamFac = Math.max(5.0/width, 20.0/height);
 const treeCamera = new THREE.OrthographicCamera(-width*treeCamFac/2, width*treeCamFac/2, height*treeCamFac, 0, 100, -100);
 const treeScene = new THREE.Scene();
+
+// Add Tree Stuff
 treeScene.add(treeMesh);
+treeScene.add(ambientLight);
+treeScene.add(directLight);
 
 // Get Leaf Position
 const leafPerBranch = 1;
@@ -258,6 +284,13 @@ const leafPosArr = leafPos.flatMap(e => {
     return [e.x, e.y]
 });
 console.log(leafPosArr)
+
+// Direct Light from Leaf
+for (let pos of leafPos) {
+  let leafLight = new THREE.DirectionalLight(0x440044, 0.1);
+  leafLight.position.set(pos.x, pos.y, pos.z);
+  treeScene.add(leafLight);
+}
 
 // End Tree
 
