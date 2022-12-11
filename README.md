@@ -7,6 +7,7 @@ import { TreeGeometry } from "./tree/TreeGeometry";
 
 // Generate Tree
 const tree = new THREE.Tree({
+  from: new THREE.Vector3(1, 2, 3), // (Optional) root location
   generations: 4, // # for branch' hierarchy
   length: 4.0, // length of root branch
   uvLength: 16.0, // uv.v ratio against geometry length (recommended is generations * length)
