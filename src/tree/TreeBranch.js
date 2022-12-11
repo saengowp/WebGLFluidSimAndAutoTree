@@ -177,4 +177,27 @@ export class TreeBranch {
 
     return length;
   }
+
+  // Get Leaf Positions
+  getLeafPositions(leafPerBranch) {
+    // Define leaf position
+    let leafPositions = [];
+    // Not from Root
+    if (this.from !== null) {
+      let vertices = [];
+      for (let segment of this.segments.slice(1)) {
+        vertices = vertices.concat(segment.vertices);
+      }
+      // sample leaf position from vertices
+      leafPositions = _.sample(vertices, leafPerBranch);
+    }
+
+    // Get Leaf from Children
+    this.children.forEach((child) => {
+      let childPos = child.getLeafPositions(leafPerBranch);
+      leafPositions = leafPositions.concat(childPos);
+    });
+
+    return leafPositions;
+  }
 }

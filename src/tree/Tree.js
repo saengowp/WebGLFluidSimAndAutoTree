@@ -61,4 +61,8 @@ export class Tree {
   branchlets() {
     return this.root.branchlets;
   }
+
+  getLeafPositions(leafPerBranch) {
+    return this.root.getLeafPositions(leafPerBranch);
+  }
 }
