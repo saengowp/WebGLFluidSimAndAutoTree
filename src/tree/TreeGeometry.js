@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Triangle, Vector3 } from "three";
 
 export class TreeGeometry {
   build(tree) {
@@ -7,14 +8,20 @@ export class TreeGeometry {
     this.uvs = [];
     this.faces = [];
     this.faceVertexUvs = [];
+    this.normals = [];
     // Add Values to vertics, uvs, faces, faceVertexUvs
     this.buildBranches(tree.root);
 
     // Create Array for Geometry
     const postionsArray = [];
+    const normsArray = [];
     const uvsArray = [];
+
     for (let f of this.faces) {
       postionsArray.push(...this.vertices[f]);
+    }
+    for (let norm of this.normals) {
+      normsArray.push(...norm);
     }
     for (let fuvs of this.faceVertexUvs) {
       uvsArray.push(...fuvs);
@@ -26,11 +33,15 @@ export class TreeGeometry {
       new THREE.BufferAttribute(new Float32Array(postionsArray), 3)
     );
     geometry.setAttribute(
+      "normal",
+      new THREE.BufferAttribute(new Float32Array(normsArray), 3)
+    );
+    geometry.setAttribute(
       "uv",
       new THREE.BufferAttribute(new Float32Array(uvsArray), 2)
     );
     // geometry.setIndex(this.faces);
-    // geometry.computeVertexNormals();
+    geometry.computeVertexNormals();
 
     return geometry;
   }
@@ -43,11 +54,13 @@ export class TreeGeometry {
     var vertices = [];
     const faces = [];
     const faceVertexUvs = [];
+    const normals = [];
 
     const indices = [];
     const uvs = [];
 
     let index = 0;
+    let norm;
     const offset = this.vertices.length;
 
     // Push Index for each segment
@@ -65,8 +78,19 @@ export class TreeGeometry {
 
       indices.push(indicesRow);
     }
+    // Define to calculate normal
+    const calNormal = (v1, v2, v3) => {
+      let norm = new Vector3();
+      let triangle = new Triangle(
+        this.vertices[v1],
+        this.vertices[v2],
+        this.vertices[v3]
+      );
+      triangle.getNormal(norm);
+      return norm;
+    };
 
-    // Add Faces and UVs
+    // Add Faces , UVs and Normal
     for (let i = 0; i < radiusSegments; i++) {
       for (let j = 0; j < heightSegments; j++) {
         // Define Index
@@ -87,9 +111,13 @@ export class TreeGeometry {
 
         faces.push(v1, v4, v2);
         faceVertexUvs.push(uv1, uv4, uv2);
+        norm = calNormal(v1, v4, v2);
+        normals.push(norm, norm, norm);
 
         faces.push(v2, v4, v3);
         faceVertexUvs.push(uv2, uv4, uv3);
+        norm = calNormal(v2, v4, v3);
+        normals.push(norm, norm, norm);
       }
     }
 
@@ -112,6 +140,8 @@ export class TreeGeometry {
 
         faces.push(v1, v3, v2);
         faceVertexUvs.push(uv1, uv3, uv2);
+        norm = calNormal(v1, v3, v2);
+        normals.push(norm, norm, norm);
       }
       // Otherwise
     } else {
@@ -138,9 +168,13 @@ export class TreeGeometry {
 
         faces.push(v0, v3, v1);
         faceVertexUvs.push(uv0, uv3, uv1);
+        norm = calNormal(v0, v3, v1);
+        normals.push(norm, norm, norm);
 
         faces.push(v0, v2, v3);
         faceVertexUvs.push(uv0, uv2, uv3);
+        norm = calNormal(v0, v2, v3);
+        normals.push(norm, norm, norm);
       }
     }
     // const verticeArray = [];
@@ -157,6 +191,7 @@ export class TreeGeometry {
     this.uvs = this.uvs.concat(uvs);
     this.faces = this.faces.concat(faces);
     this.faceVertexUvs = this.faceVertexUvs.concat(faceVertexUvs);
+    this.normals = this.normals.concat(normals);
     // geometry.faces = geometry.faces.concat(faces);
     // geometry.faceVertexUvs[0] = geometry.faceVertexUvs[0].concat(faceVertexUvs);
 
