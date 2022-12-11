@@ -18,6 +18,7 @@ const controlData = {
     windX: 0,
     windY: 0,
     boyance: true,
+    treeEmitter: true,
 };
 
 // Setup Scene and Renderer
@@ -266,6 +267,8 @@ const treePoints = new THREE.Points(treePointsGeom, new PointsMaterial({size: 5,
 treePoints.visible = false;
 bufferScene.add(treePoints);
 
+gui.add(controlData, "treeEmitter");
+
 
 
 
@@ -290,7 +293,9 @@ function animate() {
     windMaterial.uniforms.previous.value = bufferA.texture;
     windMaterial.uniforms.dt.value = dt;
     mesh.material = windMaterial;
-    treePoints.visible = true;
+    if (controlData.treeEmitter) {
+        treePoints.visible = true;
+    }
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
     treePoints.visible = false;
