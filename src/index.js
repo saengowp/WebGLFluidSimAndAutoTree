@@ -229,7 +229,7 @@ const treeLightGui = gui.addFolder("Tree Direct Light");
 const tree = new Tree({
 generations: 4, // # for branch' hierarchy
 length: 7.0, // length of root branch
-uvLength: 1.0, // uv.v ratio against geometry length (recommended is generations * length)
+uvLength: 28.0, // uv.v ratio against geometry length (recommended is generations * length)
 radius: 0.3, // radius of root branch
 radiusSegments: 20, // # of radius segments for each branch geometry
 heightSegments: 20, // # of height segments for each branch geometry
@@ -246,7 +246,7 @@ const treeMaterial = new THREE.MeshPhongMaterial({
   color: 0x302622,
   shininess: 1,
   normalMap: normalMap,
-  displacementMap: bumpMap,
+  bumpMap: bumpMap
 });
 const treeMesh = new THREE.Mesh(treeMaterializedGeometry, treeMaterial);
 
