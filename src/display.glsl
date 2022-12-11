@@ -22,4 +22,5 @@ void main() {
     } else {
         gl_FragColor = val*2.0 * cB + (1.0 - val*2.0) * cC;
     }
+    gl_FragColor.a = val;
 }

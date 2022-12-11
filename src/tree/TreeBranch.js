@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { TreeSegment } from "./TreeSegment";
+import * as _ from 'lodash';
 
 export class TreeBranch {
   constructor(params) {
@@ -189,7 +190,7 @@ export class TreeBranch {
         vertices = vertices.concat(segment.vertices);
       }
       // sample leaf position from vertices
-      leafPositions = _.sample(vertices, leafPerBranch);
+      leafPositions = _.sampleSize(vertices, leafPerBranch);
     }
 
     // Get Leaf from Children

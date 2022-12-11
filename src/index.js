@@ -8,6 +8,8 @@ import projectApply from "raw-loader!./project-apply.glsl";
 import displayShader from "raw-loader!./display.glsl";
 import windShader from "raw-loader!./wind.glsl";
 import * as dat from 'dat.gui';
+import * as _ from 'lodash';
+
 
 // UI
 const gui = new dat.GUI();
@@ -201,18 +203,70 @@ const displayMaterial = new THREE.ShaderMaterial({
             type: 'int',
             value: 0,
         }
-    }
+    },
+    transparent: true,
 });
 
 gui.add(controlData, "channel", 0, 3, 1).onChange(v => displayMaterial.uniforms.ch.value = v);
 const displayMesh = new THREE.Mesh(geometry, displayMaterial);
 scene.add(displayMesh);
 
-let f = false;
 let lastFrame = 0;
 
 controlData["runSimulation"] = true;
 gui.add(controlData, "runSimulation");
+
+// Tree
+// Import
+import { Tree } from "./tree/Tree";
+import { TreeGeometry } from "./tree/TreeGeometry";
+import { BufferGeometry, PointsMaterial } from 'three';
+
+// Generate Tree
+const tree = new Tree({
+generations: 4, // # for branch' hierarchy
+length: 4.0, // length of root branch
+uvLength: 16.0, // uv.v ratio against geometry length (recommended is generations * length)
+radius: 0.2, // radius of root branch
+radiusSegments: 8, // # of radius segments for each branch geometry
+heightSegments: 8, // # of height segments for each branch geometry
+});
+
+// Build Geometry
+const treeGeometry = new TreeGeometry();
+const treeMaterializedGeometry = treeGeometry.build(tree);
+const treeMaterial = new THREE.MeshBasicMaterial();
+const treeMesh = new THREE.Mesh(treeMaterializedGeometry, treeMaterial);
+
+// Add to scene
+const treeCamFac = Math.max(5.0/width, 20.0/height);
+const treeCamera = new THREE.OrthographicCamera(-width*treeCamFac/2, width*treeCamFac/2, height*treeCamFac, 0, 100, -100);
+const treeScene = new THREE.Scene();
+treeScene.add(treeMesh);
+
+// Get Leaf Position
+const leafPerBranch = 1;
+const leafPos = tree.getLeafPositions(leafPerBranch);
+
+console.log(treeCamera)
+const leafPosArr = leafPos.flatMap(e => {
+    e = e.clone()
+    e.project(treeCamera)
+    e.x *= width/2;
+    e.y *= height/2;
+    return [e.x, e.y]
+});
+console.log(leafPosArr)
+
+// End Tree
+
+const treePointsGeom = new THREE.BufferGeometry()
+treePointsGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(leafPosArr), 2));
+const treePoints = new THREE.Points(treePointsGeom, new PointsMaterial({size: 5, color: 0xFFFFFF, opacity: 0.1, transparent: true}));
+treePoints.visible = false;
+bufferScene.add(treePoints);
+
+
 
 
 // Render Loop
@@ -222,6 +276,7 @@ function animate() {
     renderer.setSize(width, height);
 
     if (!controlData.runSimulation) {
+        renderer.setSize(screenWidth, screenHeight);
         renderer.setRenderTarget(null);
         displayMesh.material.map = bufferB.texture;
         renderer.render(scene, camera)
@@ -235,9 +290,10 @@ function animate() {
     windMaterial.uniforms.previous.value = bufferA.texture;
     windMaterial.uniforms.dt.value = dt;
     mesh.material = windMaterial;
+    treePoints.visible = true;
     renderer.setRenderTarget(bufferB);
     renderer.render(bufferScene, camera);
-
+    treePoints.visible = false;
 
     // Diffuse
     for (let i = 0; i < 20; i++) {
@@ -280,17 +336,22 @@ function animate() {
     renderer.render(bufferScene, camera);
 
     // Display
+
+    
     renderer.setSize(screenWidth, screenHeight);
     renderer.setRenderTarget(null);
     displayMaterial.uniforms.previous.value = bufferB.texture;
-    renderer.render(scene, camera)
 
-    if (!f) {
-        console.log(renderer.info);
-        console.log({width, height});
-        f = true;
-    }
+
+    renderer.render(treeScene, treeCamera);
+
+    renderer.autoClear = false;
+    renderer.clearDepth();
+
+    renderer.render(scene, camera)
+    renderer.autoClear = true;
 }
+
 
 // DOM Insertion and Start Render Loop
 document.body.appendChild(renderer.domElement);
