@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { TreeSegment } from "./TreeSegment";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class TreeBranch {
   constructor(params) {
@@ -184,7 +184,7 @@ export class TreeBranch {
     // Define leaf position
     let leafPositions = [];
     // Not from Root
-    if (this.from !== null) {
+    if (this.from !== null && this.generation >= this.generations - 1) {
       let vertices = [];
       for (let segment of this.segments.slice(1)) {
         vertices = vertices.concat(segment.vertices);
