@@ -220,6 +220,8 @@ gui.add(controlData, "runSimulation");
 import { Tree } from "./tree/Tree";
 import { TreeGeometry } from "./tree/TreeGeometry";
 import { BufferGeometry, PointsMaterial } from 'three';
+import TreeNormalMap from "./tree/asset/tree-normal-map.jpg";
+import TreeBumpMap from "./tree/asset/tree-bump-map.png";
 
 const treeLightGui = gui.addFolder("Tree Direct Light");
 
@@ -238,8 +240,8 @@ const treeGeometry = new TreeGeometry();
 const treeMaterializedGeometry = treeGeometry.build(tree);
 //Texture
 const textureloader = new THREE.TextureLoader();
-const normalMap = textureloader.load("./tree/asset/tree-normal-map.jpg");
-const bumpMap = textureloader.load("./tree/asset/tree-bump-map.png");
+const normalMap = textureloader.load(TreeNormalMap);
+const bumpMap = textureloader.load(TreeBumpMap);
 const treeMaterial = new THREE.MeshPhongMaterial({
   color: 0x302622,
   shininess: 1,
