@@ -147,24 +147,32 @@ gui.add(controlData, "boyance").onChange(e => windMaterial.uniforms.boyance.valu
 
 let genDragActive = false;
 
-document.addEventListener("mousedown", e => {
+function mousedownHandler(e) {
     genDragActive = true;
     windMaterial.uniforms.genVel.value = new THREE.Vector2(0, 0);
     windMaterial.uniforms.gen.value = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
-})
-document.addEventListener("mouseup", e => {
+}
+
+function mouseupHandler(e) {
     windMaterial.uniforms.gen.value = new THREE.Vector2(-1.0, -1.0);
     genDragActive = false;
-})
+}
 
-document.addEventListener("mousemove", e => {
+function mousemoveHandler(e) {
     if (genDragActive) {
         const newSrc = new THREE.Vector2(e.clientX/simFac, (screenHeight-e.clientY)/simFac);
         const oldSrc = windMaterial.uniforms.gen.value;
         windMaterial.uniforms.genVel.value = new THREE.Vector2((newSrc.x - oldSrc.x) * 10, (newSrc.y - oldSrc.y) * 10);
         windMaterial.uniforms.gen.value = newSrc;
     }
-})
+}
+
+document.addEventListener("mousedown", mousedownHandler);
+document.addEventListener("mouseup", mouseupHandler);
+document.addEventListener("mousemove", mousemoveHandler);
+document.addEventListener("touchstart", e => mousedownHandler(e.changedTouches[0]));
+document.addEventListener("touchend", e => mouseupHandler(e.changedTouches[0]));
+document.addEventListener("touchmove", e => mousemoveHandler(e.changedTouches[0]));
 
 
 
