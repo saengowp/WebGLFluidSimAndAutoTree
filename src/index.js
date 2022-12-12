@@ -37,12 +37,10 @@ renderer.setSize(width, height);
 const geometry = new THREE.PlaneGeometry(width, height);
 
 
-const testTex = new THREE.TextureLoader().load("test.jpg")
 let bufferA = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 let bufferB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 let divB = new THREE.WebGLRenderTarget(width, height, {minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, type: THREE.FloatType});
 
-const testMaterial = new THREE.MeshBasicMaterial({color: 0xFF0000});
 const clearMaterial = new THREE.MeshBasicMaterial({color: 0x000000, opacity: 0.0});
 const diffuseMaterial = new THREE.ShaderMaterial({
     fragmentShader: diffuseShader,
